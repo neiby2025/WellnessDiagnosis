@@ -68,14 +68,10 @@ def main():
         
         **診断できる体質タイプ：**
         - 気虚（ききょ）
-        - 陽虚（ようきょ）
-        - 陰虚（いんきょ）
-        - 痰湿（たんしつ）
-        - 湿熱（しつねつ）
-        - 血瘀（けつお）
-        - 気鬱（きうつ）
-        - 特禀（とくひん）
-        - 平和（へいわ）
+        - 気滞（きたい）
+        - 水滞（すいたい）
+        - 血虚（けっきょ）
+        - 瘀血（おけつ）
         """)
     
     # 診断が完了していない場合は質問を表示
@@ -96,28 +92,56 @@ def main():
         
         # 質問票
         st.subheader("体調に関する質問")
-        st.write("あなたの普段の体調に最も近いものを選択してください。")
+        st.write("以下の質問にお答えください。該当する場合は詳細な症状もお聞きします。")
         
         responses = {}
         
-        for i, question in enumerate(TCM_QUESTIONS):
-            st.write(f"**質問 {i+1}: {question['question']}**")
+        for i, question_data in enumerate(TCM_QUESTIONS):
+            st.write(f"**質問 {i+1}: {question_data['question']}**")
             
-            response = st.radio(
-                f"質問{i+1}の回答",
-                question['options'],
-                key=f"q_{i}",
-                label_visibility="collapsed"
-            )
-            responses[f"question_{i}"] = response
+            # 自由記述の質問かどうかチェック
+            if question_data.get('type') == 'free_text':
+                response = st.text_area(
+                    f"質問{i+1}の回答",
+                    placeholder=question_data.get('placeholder', ''),
+                    key=f"q_{i}",
+                    label_visibility="collapsed"
+                )
+                responses[f"question_{i}"] = response
+                responses[f"question_{i}_question"] = question_data['question']
+            else:
+                # 通常の選択肢質問
+                response = st.radio(
+                    f"質問{i+1}の回答",
+                    question_data['options'],
+                    key=f"q_{i}",
+                    label_visibility="collapsed"
+                )
+                responses[f"question_{i}"] = response
+                responses[f"question_{i}_question"] = question_data['question']
+                
+                # フォローアップ質問がある場合
+                if response == "はい" and 'follow_up_questions' in question_data:
+                    st.write("　　↓ 詳細をお聞かせください")
+                    for j, follow_up in enumerate(question_data['follow_up_questions']):
+                        follow_up_response = st.radio(
+                            follow_up['question'],
+                            follow_up['options'],
+                            key=f"q_{i}_follow_{j}",
+                            label_visibility="visible"
+                        )
+                        responses[f"question_{i}_follow_up_{j}"] = follow_up_response
         
         # 診断ボタン
         st.markdown("---")
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             if st.button("🔍 体質診断を実行", type="primary", use_container_width=True):
-                # 全ての質問に回答されているかチェック
-                if len(responses) == len(TCM_QUESTIONS):
+                # 必須質問に回答されているかチェック
+                required_questions = [i for i, q in enumerate(TCM_QUESTIONS) if q.get('type') != 'free_text']
+                answered_questions = [i for i in range(len(TCM_QUESTIONS)) if f"question_{i}" in responses and responses[f"question_{i}"].strip()]
+                
+                if len(answered_questions) >= len(required_questions):
                     # 診断エンジンで結果を計算
                     engine = DiagnosisEngine()
                     diagnosis_result = engine.diagnose(responses)
