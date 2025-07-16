@@ -98,15 +98,25 @@ def main():
                 
                 # フォローアップ質問がある場合
                 if response == "はい" and 'follow_up_questions' in question_data:
-                    st.write("　　↓ 詳細をお聞かせください")
+                    st.write("　　↓ 詳細をお聞かせください（複数選択可）")
                     for j, follow_up in enumerate(question_data['follow_up_questions']):
-                        follow_up_response = st.radio(
-                            follow_up['question'],
-                            follow_up['options'],
-                            key=f"q_{i}_follow_{j}",
-                            label_visibility="visible"
-                        )
-                        responses[f"question_{i}_follow_up_{j}"] = follow_up_response
+                        st.write(f"**{follow_up['question']}**")
+                        
+                        # 複数選択可能なチェックボックス
+                        selected_options = []
+                        for k, option in enumerate(follow_up['options']):
+                            if st.checkbox(
+                                option,
+                                key=f"q_{i}_follow_{j}_option_{k}",
+                                value=False
+                            ):
+                                selected_options.append(option)
+                        
+                        # 選択された項目を保存（複数の場合はカンマ区切り）
+                        if selected_options:
+                            responses[f"question_{i}_follow_up_{j}"] = ", ".join(selected_options)
+                        else:
+                            responses[f"question_{i}_follow_up_{j}"] = "どれも当てはまらない"
         
         # 診断ボタン
         st.markdown("---")

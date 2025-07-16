@@ -91,17 +91,26 @@ class DiagnosisEngine:
         for q_key, response in responses.items():
             if "follow_up" in q_key and response != "どれも当てはまらない":
                 max_score += 1
+                # 複数選択の場合（カンマ区切り）もチェック
+                response_items = [item.strip() for item in response.split(',')]
+                
                 # 特定の症状がある場合の加算ロジック
-                if constitution_type == "気虚" and response in ["息切れしやすい", "声に力がない", "食後に眠くなる"]:
-                    score += 1
-                elif constitution_type == "気滞" and response in ["ため息をよくつく", "月経前に不調がある", "胸や喉に違和感"]:
-                    score += 1
-                elif constitution_type == "水滞" and response in ["雨の日に体調が悪い", "下痢や軟便になりやすい", "舌に歯型がある"]:
-                    score += 1
-                elif constitution_type == "血虚" and response in ["爪が割れやすい", "動悸がある", "夢をよく見る"]:
-                    score += 1
-                elif constitution_type == "瘀血" and response in ["刺すような痛み", "経血に血塊が多い", "シミやくすみが目立つ"]:
-                    score += 1
+                matching_symptoms = []
+                if constitution_type == "気虚":
+                    matching_symptoms = ["息切れしやすい", "声に力がない", "食後に眠くなる"]
+                elif constitution_type == "気滞":
+                    matching_symptoms = ["ため息をよくつく", "月経前に不調がある", "胸や喉に違和感"]
+                elif constitution_type == "水滞":
+                    matching_symptoms = ["雨の日に体調が悪い", "下痢や軟便になりやすい", "舌に歯型がある"]
+                elif constitution_type == "血虚":
+                    matching_symptoms = ["爪が割れやすい", "動悸がある", "夢をよく見る"]
+                elif constitution_type == "瘀血":
+                    matching_symptoms = ["刺すような痛み", "経血に血塊が多い", "シミやくすみが目立つ"]
+                
+                # マッチする症状の数に応じてスコア加算
+                matches = sum(1 for item in response_items if item in matching_symptoms)
+                if matches > 0:
+                    score += min(matches, 2)  # 最大2点まで加算
         
         # 正規化されたスコア（0-100）
         if max_score > 0:
