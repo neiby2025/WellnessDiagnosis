@@ -4,6 +4,7 @@ import datetime
 import os
 from tcm_data import TCM_QUESTIONS, CONSTITUTION_TYPES, HEALTH_ADVICE
 from diagnosis_engine import DiagnosisEngine
+from database import save_diagnosis_result, get_diagnosis_history, get_diagnosis_stats
 
 # ページ設定
 st.set_page_config(
@@ -20,35 +21,10 @@ if 'user_responses' not in st.session_state:
 if 'diagnosis_result' not in st.session_state:
     st.session_state.diagnosis_result = None
 
-def save_result_to_csv(user_data, diagnosis_result):
-    """診断結果をCSVファイルに保存"""
+def save_result_to_database(user_data, diagnosis_result, responses):
+    """診断結果をデータベースに保存"""
     try:
-        # データディレクトリが存在しない場合は作成
-        os.makedirs('data', exist_ok=True)
-        
-        # 保存するデータを準備
-        result_data = {
-            'タイムスタンプ': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            '年齢': user_data.get('age', ''),
-            '性別': user_data.get('gender', ''),
-            '体質タイプ': diagnosis_result['constitution_type'],
-            'スコア': diagnosis_result['score'],
-            '信頼度': f"{diagnosis_result['confidence']:.1f}%"
-        }
-        
-        # 質問への回答も保存
-        for i, response in enumerate(st.session_state.user_responses.values()):
-            result_data[f'質問{i+1}'] = response
-        
-        # CSVファイルに追記
-        df = pd.DataFrame([result_data])
-        csv_file = 'data/results.csv'
-        
-        if os.path.exists(csv_file):
-            df.to_csv(csv_file, mode='a', header=False, index=False, encoding='utf-8')
-        else:
-            df.to_csv(csv_file, mode='w', header=True, index=False, encoding='utf-8')
-        
+        result = save_diagnosis_result(user_data, diagnosis_result, responses)
         return True
     except Exception as e:
         st.error(f"結果の保存に失敗しました: {str(e)}")
@@ -151,9 +127,9 @@ def main():
                     st.session_state.diagnosis_result = diagnosis_result
                     st.session_state.diagnosis_complete = True
                     
-                    # 結果をCSVに保存
+                    # 結果をデータベースに保存
                     user_data = {'age': age, 'gender': gender}
-                    save_result_to_csv(user_data, diagnosis_result)
+                    save_result_to_database(user_data, diagnosis_result, responses)
                     
                     st.rerun()
                 else:
@@ -227,22 +203,67 @@ def main():
         # 診断履歴の表示（管理者向け）
         if st.checkbox("📊 診断履歴を表示（管理者向け）"):
             try:
-                if os.path.exists('data/results.csv'):
-                    df = pd.read_csv('data/results.csv', encoding='utf-8')
+                # 統計情報の表示
+                stats = get_diagnosis_stats()
+                
+                st.subheader("📈 診断統計")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("総診断数", stats['total_diagnoses'])
+                
+                with col2:
+                    if stats['constitution_stats']:
+                        most_common = max(stats['constitution_stats'], key=lambda x: x.count)
+                        st.metric("最多体質タイプ", f"{most_common.constitution_type} ({most_common.count}件)")
+                
+                with col3:
+                    if stats['gender_stats']:
+                        gender_data = {g.gender: g.count for g in stats['gender_stats']}
+                        st.metric("性別分布", f"男:{gender_data.get('男性', 0)} 女:{gender_data.get('女性', 0)}")
+                
+                # 体質タイプ別統計のグラフ
+                if stats['constitution_stats']:
+                    st.subheader("体質タイプ別分布")
+                    constitution_df = pd.DataFrame([
+                        {'体質タイプ': c.constitution_type, '件数': c.count} 
+                        for c in stats['constitution_stats']
+                    ])
+                    st.bar_chart(constitution_df.set_index('体質タイプ'))
+                
+                # 診断履歴の詳細表示
+                st.subheader("📋 診断履歴詳細")
+                history = get_diagnosis_history(50)  # 最新50件
+                
+                if history:
+                    history_data = []
+                    for record in history:
+                        history_data.append({
+                            'タイムスタンプ': record.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                            '年齢': record.age,
+                            '性別': record.gender,
+                            '体質タイプ': record.constitution_type,
+                            'スコア': f"{record.score:.1f}",
+                            '信頼度': f"{record.confidence:.1f}%",
+                            '気になる不調': record.free_text_concern[:50] + "..." if record.free_text_concern and len(record.free_text_concern) > 50 else record.free_text_concern
+                        })
+                    
+                    df = pd.DataFrame(history_data)
                     st.dataframe(df, use_container_width=True)
                     
                     # CSVダウンロード
                     csv = df.to_csv(index=False, encoding='utf-8')
                     st.download_button(
-                        label="📥 CSVファイルをダウンロード",
+                        label="📥 診断履歴をCSVでダウンロード",
                         data=csv,
-                        file_name=f"tcm_diagnosis_results_{datetime.datetime.now().strftime('%Y%m%d')}.csv",
+                        file_name=f"tcm_diagnosis_history_{datetime.datetime.now().strftime('%Y%m%d')}.csv",
                         mime="text/csv"
                     )
                 else:
                     st.info("まだ診断履歴がありません。")
+                    
             except Exception as e:
-                st.error(f"履歴の読み込みに失敗しました: {str(e)}")
+                st.error(f"データベースの読み込みに失敗しました: {str(e)}")
 
 if __name__ == "__main__":
     main()

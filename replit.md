@@ -22,9 +22,12 @@ Preferred communication style: Simple, everyday language.
 - **Session Management**: Streamlit's built-in session state for maintaining user data across interactions
 
 ### Data Storage Solutions
-- **Primary Storage**: CSV file-based storage for diagnosis results
-- **File Structure**: Results stored in `data/results.csv` with automatic directory creation
-- **Data Persistence**: Local file system storage with timestamp-based records
+- **Primary Storage**: PostgreSQL database for diagnosis results and statistics
+- **Database Schema**: 
+  - `diagnosis_results` table: stores all diagnosis data with JSONB for responses
+  - `users` table: user tracking for future expansion
+- **Data Persistence**: Cloud-based PostgreSQL with automated backups
+- **Legacy Support**: Maintained CSV export functionality for data portability
 
 ## Key Components
 
