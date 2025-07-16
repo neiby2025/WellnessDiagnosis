@@ -40,10 +40,11 @@ Preferred communication style: Simple, everyday language.
   - Integration with diagnosis engine
 
 ### 2. Diagnosis Engine (diagnosis_engine.py)
-- **Purpose**: Core logic for TCM constitution assessment
-- **Algorithm**: Weighted scoring system based on TCM principles
-- **Constitution Types**: Supports multiple TCM constitution types (気虚, 陽虚, 陰虚, 痰湿, 湿熱, 血瘀, 気鬱)
-- **Scoring Method**: Question-response mapping with constitution-specific weights
+- **Purpose**: Core logic for TCM constitution assessment based on medical documentation
+- **Algorithm**: Weighted scoring system following traditional Chinese medicine principles
+- **Constitution Types**: 5 types (気虚, 気滞, 水滞, 血虚, 瘀血) with medical accuracy
+- **Scoring Method**: Question-response mapping with symptom-specific weights from TCM literature
+- **Free Text Analysis**: Keyword-based analysis of user's primary concerns
 
 ### 3. TCM Data Module (tcm_data.py)
 - **Purpose**: Static data storage for questions, constitution types, and health advice

@@ -5,59 +5,90 @@ class DiagnosisEngine:
     """東洋医学体質診断エンジン（新しい問診フォーマット対応）"""
     
     def __init__(self):
-        # 各体質タイプに対する診断ロジック
+        # 各体質タイプに対する診断ロジック（TCM専門文書に基づく）
         self.diagnosis_rules = {
             "気虚": {
-                "primary_indicators": [
-                    ("疲れやすいと感じますか？", "はい"),
-                    ("食欲がない、軟便になりやすいですか？", "はい")
-                ],
-                "secondary_indicators": [
-                    ("風邪をひきやすい、肌が乾燥しやすいですか？", "はい"),
-                    ("下半身が冷えやすい、足腰がだるくなることがありますか？", "はい")
-                ]
+                "primary_questions": {
+                    "疲れやすいと感じますか？": 4,  # 主症状
+                    "食欲がない、軟便になりやすいですか？": 3,  # 脾胃気虚
+                    "風邪をひきやすい、肌が乾燥しやすいですか？": 3,  # 肺気虚
+                    "下半身が冷えやすい、足腰がだるくなることがありますか？": 3  # 腎陽虚
+                },
+                "follow_up_symptoms": {
+                    # 質問1のフォローアップ
+                    "朝から": 2, "食後に": 3, "夕方以降": 2,
+                    "息切れしやすい": 3, "声に力がない": 3, "食後に眠くなる": 3,
+                    # 質問7のフォローアップ
+                    "動悸がする": 2,
+                    # 質問8のフォローアップ  
+                    "食欲がない、または食べたくないことがよくある": 3,
+                    "下痢・軟便になりやすい": 2, "食後すぐにお腹がもたれる": 2,
+                    # 質問9のフォローアップ
+                    "鼻水や鼻づまり": 2,
+                    # 質問10のフォローアップ
+                    "頻尿・夜間尿がある": 3, "足腰のだるさがある": 3, "耳鳴り・聴力低下がある": 2
+                }
             },
             "気滞": {
-                "primary_indicators": [
-                    ("イライラしやすい、胸やお腹がつかえる感じはありますか？", "はい"),
-                    ("感情の波が激しい、目の疲れやすさはありますか？", "はい")
-                ],
-                "secondary_indicators": [
-                    ("不安感が強い、睡眠の不調を感じますか？", "はい")
-                ]
+                "primary_questions": {
+                    "イライラしやすい、胸やお腹がつかえる感じはありますか？": 4,  # 主症状
+                    "感情の波が激しい、目の疲れやすさはありますか？": 3,  # 肝気鬱結
+                    "不安感が強い、睡眠の不調を感じますか？": 2  # 肝鬱による
+                },
+                "follow_up_symptoms": {
+                    # 質問2のフォローアップ
+                    "ため息をよくつく": 3, "月経前に不調がある": 3, "胸や喉に違和感": 3,
+                    # 質問6のフォローアップ
+                    "怒りっぽい": 4, "月経不順": 3
+                }
             },
             "水滞": {
-                "primary_indicators": [
-                    ("むくみやすい、胃がぽちゃぽちゃすることはありますか？", "はい"),
-                    ("食欲がない、軟便になりやすいですか？", "はい")
-                ],
-                "secondary_indicators": [
-                    ("下半身が冷えやすい、足腰がだるくなることがありますか？", "はい")
-                ]
+                "primary_questions": {
+                    "むくみやすい、胃がぽちゃぽちゃすることはありますか？": 4,  # 主症状
+                    "食欲がない、軟便になりやすいですか？": 2  # 脾虚湿盛
+                },
+                "follow_up_symptoms": {
+                    # 質問5のフォローアップ
+                    "雨の日に体調が悪い": 3, "下痢や軟便になりやすい": 3, "舌に歯型がある": 3,
+                    # 質問8のフォローアップ
+                    "下痢・軟便になりやすい": 2,
+                    # 質問9のフォローアップ
+                    "鼻水や鼻づまり": 2
+                }
             },
             "血虚": {
-                "primary_indicators": [
-                    ("顔色が青白い、めまいがしやすいですか？", "はい"),
-                    ("不安感が強い、睡眠の不調を感じますか？", "はい")
-                ],
-                "secondary_indicators": [
-                    ("疲れやすいと感じますか？", "はい"),
-                    ("風邪をひきやすい、肌が乾燥しやすいですか？", "はい")
-                ]
+                "primary_questions": {
+                    "顔色が青白い、めまいがしやすいですか？": 4,  # 主症状
+                    "不安感が強い、睡眠の不調を感じますか？": 3,  # 心血虚
+                    "感情の波が激しい、目の疲れやすさはありますか？": 2,  # 肝血虚
+                    "風邪をひきやすい、肌が乾燥しやすいですか？": 2  # 血燥
+                },
+                "follow_up_symptoms": {
+                    # 質問3のフォローアップ
+                    "爪が割れやすい": 3, "動悸がある": 3, "夢をよく見る": 3,
+                    # 質問6のフォローアップ
+                    "目が乾く、かすむ": 3,
+                    # 質問7のフォローアップ
+                    "動悸がする": 2, "眠りが浅い": 3, "多夢": 3,
+                    # 質問9のフォローアップ
+                    "肌が乾燥する": 3, "空咳": 2,
+                    # 質問10のフォローアップ
+                    "耳鳴り・聴力低下がある": 2
+                }
             },
             "瘀血": {
-                "primary_indicators": [
-                    ("肩こりや生理痛がひどいなど、血の巡りが悪いと感じることはありますか？", "はい"),
-                    ("感情の波が激しい、目の疲れやすさはありますか？", "はい")
-                ],
-                "secondary_indicators": [
-                    ("イライラしやすい、胸やお腹がつかえる感じはありますか？", "はい")
-                ]
+                "primary_questions": {
+                    "肩こりや生理痛がひどいなど、血の巡りが悪いと感じることはありますか？": 4  # 主症状
+                },
+                "follow_up_symptoms": {
+                    # 質問4のフォローアップ
+                    "刺すような痛み": 4, "経血に血塊が多い": 4, "シミやくすみが目立つ": 3
+                }
             }
         }
     
     def calculate_constitution_score(self, responses, constitution_type):
-        """特定の体質タイプのスコアを計算"""
+        """特定の体質タイプのスコアを計算（TCM専門文書に基づく）"""
         if constitution_type not in self.diagnosis_rules:
             return 0
         
@@ -65,52 +96,29 @@ class DiagnosisEngine:
         score = 0
         max_score = 0
         
-        # プライマリ指標のチェック（重み3）
-        for question, expected_answer in rules["primary_indicators"]:
-            max_score += 3
+        # プライマリ質問のチェック
+        for question, weight in rules["primary_questions"].items():
+            max_score += weight
             # 質問文をチェック
             for q_key, response in responses.items():
                 if "_question" in q_key and question in response:
                     # 対応する回答を取得
                     answer_key = q_key.replace("_question", "")
-                    if answer_key in responses and responses[answer_key] == expected_answer:
-                        score += 3
+                    if answer_key in responses and responses[answer_key] == "はい":
+                        score += weight
                     break
         
-        # セカンダリ指標のチェック（重み1）
-        for question, expected_answer in rules["secondary_indicators"]:
-            max_score += 1
-            for q_key, response in responses.items():
-                if "_question" in q_key and question in response:
-                    answer_key = q_key.replace("_question", "")
-                    if answer_key in responses and responses[answer_key] == expected_answer:
-                        score += 1
-                    break
-        
-        # フォローアップ質問による加算
+        # フォローアップ症状による加算
         for q_key, response in responses.items():
             if "follow_up" in q_key and response != "どれも当てはまらない":
-                max_score += 1
-                # 複数選択の場合（カンマ区切り）もチェック
+                # 複数選択の場合（カンマ区切り）をチェック
                 response_items = [item.strip() for item in response.split(',')]
                 
-                # 特定の症状がある場合の加算ロジック
-                matching_symptoms = []
-                if constitution_type == "気虚":
-                    matching_symptoms = ["息切れしやすい", "声に力がない", "食後に眠くなる"]
-                elif constitution_type == "気滞":
-                    matching_symptoms = ["ため息をよくつく", "月経前に不調がある", "胸や喉に違和感"]
-                elif constitution_type == "水滞":
-                    matching_symptoms = ["雨の日に体調が悪い", "下痢や軟便になりやすい", "舌に歯型がある"]
-                elif constitution_type == "血虚":
-                    matching_symptoms = ["爪が割れやすい", "動悸がある", "夢をよく見る"]
-                elif constitution_type == "瘀血":
-                    matching_symptoms = ["刺すような痛み", "経血に血塊が多い", "シミやくすみが目立つ"]
-                
-                # マッチする症状の数に応じてスコア加算
-                matches = sum(1 for item in response_items if item in matching_symptoms)
-                if matches > 0:
-                    score += min(matches, 2)  # 最大2点まで加算
+                for symptom in response_items:
+                    if symptom in rules["follow_up_symptoms"]:
+                        symptom_weight = rules["follow_up_symptoms"][symptom]
+                        score += symptom_weight
+                        max_score += symptom_weight
         
         # 正規化されたスコア（0-100）
         if max_score > 0:
@@ -125,6 +133,12 @@ class DiagnosisEngine:
         for constitution_type in self.diagnosis_rules.keys():
             score = self.calculate_constitution_score(responses, constitution_type)
             constitution_scores[constitution_type] = score
+        
+        # 自由記述質問の分析（簡易版）
+        free_text_analysis = self.analyze_free_text(responses)
+        for constitution_type, additional_score in free_text_analysis.items():
+            if constitution_type in constitution_scores:
+                constitution_scores[constitution_type] += additional_score
         
         # 最高スコアの体質タイプを特定
         if constitution_scores:
@@ -152,3 +166,33 @@ class DiagnosisEngine:
             "confidence": confidence,
             "all_scores": constitution_scores
         }
+    
+    def analyze_free_text(self, responses):
+        """自由記述質問の分析"""
+        analysis_result = {"気虚": 0, "気滞": 0, "水滞": 0, "血虚": 0, "瘀血": 0}
+        
+        # 質問11の自由記述を取得
+        free_text = ""
+        for key, value in responses.items():
+            if "question_10" in key and not "_question" in key and value:
+                free_text = value.lower()
+                break
+        
+        if not free_text:
+            return analysis_result
+        
+        # キーワードベースの簡易分析
+        keywords = {
+            "気虚": ["疲れ", "だるい", "疲労", "息切れ", "食欲", "下痢", "軟便", "冷え"],
+            "気滞": ["イライラ", "ストレス", "憂鬱", "胸", "つかえ", "ため息", "生理前"],
+            "水滞": ["むくみ", "浮腫", "重い", "だるい", "雨", "湿気", "胃", "ぽちゃぽちゃ"],
+            "血虚": ["めまい", "立ちくらみ", "動悸", "不眠", "爪", "肌", "乾燥", "白い"],
+            "瘀血": ["痛み", "こり", "生理痛", "血塊", "しみ", "あざ", "刺す", "固定"]
+        }
+        
+        for constitution_type, keyword_list in keywords.items():
+            matches = sum(1 for keyword in keyword_list if keyword in free_text)
+            if matches > 0:
+                analysis_result[constitution_type] = min(matches * 2, 10)  # 最大10点
+        
+        return analysis_result
