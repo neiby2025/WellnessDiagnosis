@@ -60,9 +60,9 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            age = st.selectbox("年齢", ["20歳未満", "20-29歳", "30-39歳", "40-49歳", "50-59歳", "60歳以上"])
+            age = st.selectbox("年齢", ["20歳未満", "20-29歳", "30-39歳", "40-49歳", "50-59歳", "60歳以上"], index=3)
         with col2:
-            gender = st.selectbox("性別", ["男性", "女性", "その他"])
+            gender = st.selectbox("性別", ["男性", "女性", "その他"], index=1)
         
         st.markdown("---")
         
