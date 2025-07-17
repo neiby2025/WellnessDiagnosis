@@ -261,4 +261,5 @@ def main():
                 st.error(f"データベースの読み込みに失敗しました: {str(e)}")
 
 if __name__ == "__main__":
+    os.makedirs("data", exist_ok=True)
     main()
