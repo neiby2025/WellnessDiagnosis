@@ -60,9 +60,9 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            age = st.selectbox("年齢", ["選択してください", "20歳未満", "20-29歳", "30-39歳", "40-49歳", "50-59歳", "60歳以上"], index=0)
+            age = st.selectbox("年齢", ["20歳未満", "20-29歳", "30-39歳", "40-49歳", "50-59歳", "60歳以上"], index=3)
         with col2:
-            gender = st.selectbox("性別", ["選択してください", "男性", "女性", "その他"], index=0)
+            gender = st.selectbox("性別", ["男性", "女性", "その他"], index=1)
         
         st.markdown("---")
         
@@ -87,13 +87,11 @@ def main():
                 responses[f"question_{i}_question"] = question_data['question']
             else:
                 # 通常の選択肢質問
-                options_with_placeholder = ["選択してください"] + question_data['options']
                 response = st.radio(
                     f"質問{i+1}の回答",
-                    options_with_placeholder,
+                    question_data['options'],
                     key=f"q_{i}",
-                    label_visibility="collapsed",
-                    index=0
+                    label_visibility="collapsed"
                 )
                 responses[f"question_{i}"] = response
                 responses[f"question_{i}_question"] = question_data['question']
@@ -127,12 +125,9 @@ def main():
             if st.button("🔍 体質診断を実行", type="primary", use_container_width=True):
                 # 必須質問に回答されているかチェック
                 required_questions = [i for i, q in enumerate(TCM_QUESTIONS) if q.get('type') != 'free_text']
-                answered_questions = [i for i in range(len(TCM_QUESTIONS)) if f"question_{i}" in responses and responses[f"question_{i}"].strip() and responses[f"question_{i}"] != "選択してください"]
+                answered_questions = [i for i in range(len(TCM_QUESTIONS)) if f"question_{i}" in responses and responses[f"question_{i}"].strip()]
                 
-                # 基本情報もチェック
-                basic_info_complete = age != "選択してください" and gender != "選択してください"
-                
-                if len(answered_questions) >= len(required_questions) and basic_info_complete:
+                if len(answered_questions) >= len(required_questions):
                     # 診断エンジンで結果を計算
                     engine = DiagnosisEngine()
                     diagnosis_result = engine.diagnose(responses)
@@ -148,7 +143,7 @@ def main():
                     
                     st.rerun()
                 else:
-                    st.error("基本情報とすべての質問にお答えください。")
+                    st.error("すべての質問にお答えください。")
     
     # 診断結果の表示
     else:
