@@ -154,12 +154,7 @@ def main():
         # 結果のメイン表示
         st.success(f"**あなたの体質タイプ: {result['constitution_type']}**")
         
-        # 信頼度の表示
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("診断スコア", f"{result['score']:.1f}")
-        with col2:
-            st.metric("信頼度", f"{result['confidence']:.1f}%")
+
         
         st.markdown("---")
         
@@ -216,30 +211,22 @@ def main():
                 # 統計情報の表示
                 stats = get_diagnosis_stats()
                 
-                st.subheader("📈 診断統計")
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    st.metric("総診断数", stats['total_diagnoses'])
-                
-                with col2:
-                    if stats['constitution_stats']:
-                        most_common = max(stats['constitution_stats'], key=lambda x: x.count)
-                        st.metric("最多体質タイプ", f"{most_common.constitution_type} ({most_common.count}件)")
-                
-                with col3:
-                    if stats['gender_stats']:
-                        gender_data = {g.gender: g.count for g in stats['gender_stats']}
-                        st.metric("性別分布", f"男:{gender_data.get('男性', 0)} 女:{gender_data.get('女性', 0)}")
+                st.subheader("📈 5つの体質タイプ別集計")
                 
                 # 体質タイプ別統計のグラフ
                 if stats['constitution_stats']:
-                    st.subheader("体質タイプ別分布")
                     constitution_df = pd.DataFrame([
                         {'体質タイプ': c.constitution_type, '件数': c.count} 
                         for c in stats['constitution_stats']
                     ])
                     st.bar_chart(constitution_df.set_index('体質タイプ'))
+                    
+                    # 体質タイプ別の詳細表示
+                    st.subheader("詳細集計")
+                    for stat in stats['constitution_stats']:
+                        st.write(f"**{stat.constitution_type}**: {stat.count}件")
+                else:
+                    st.info("まだ診断データがありません。")
                 
                 # 診断履歴の詳細表示
                 st.subheader("📋 診断履歴詳細")
@@ -253,8 +240,6 @@ def main():
                             '年齢': record.age,
                             '性別': record.gender,
                             '体質タイプ': record.constitution_type,
-                            'スコア': f"{record.score:.1f}",
-                            '信頼度': f"{record.confidence:.1f}%",
                             '気になる不調': record.free_text_concern[:50] + "..." if record.free_text_concern and len(record.free_text_concern) > 50 else record.free_text_concern
                         })
                     
